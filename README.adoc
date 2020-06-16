@@ -1,0 +1,33 @@
+= Barberousse - Remote Secrets Editor
+
+A project aimed to avoid downloading secrets from remote providers (support only AWS Secret Manager for the moment).
+Opens an editor with the content of the secret readily editable, upon save & exit, the secret is automatically uploaded
+and a new version created remotely. This way, no need to use common bad-practices such as versionning secrets in a VCS
+or worst, storing them on your machin and sending them via slack :)
+
+NOTE: This project is at its earliest stage a project can be, i.e. a proof of concept that might or not develop into a full
+fledged project.
+
+== MVP WishList
+
+When all of the following is checked, it could be said that we've got our 0.1 MVP 🎂🎂🎂
+* [ ] General
+** [ ] Support selecting profiles and regions (env variables are supported though)
+** [ ] others ?
+* [-] Editing
+** [x] Edit JSON, YAML, text
+** [x] Edit JSON using YAML (default behavior)
+** [x] Edit <format> using <another format>
+** [ ] Edit basic secrets
+** [ ] Create a secret if not exist
+** [ ] Edit Secret metadata
+** [ ] Templating support, allow the user to create a secret from a template
+* [ ] Printing
+** [ ] Cat the content of a secret in one or many other formats
+** [ ] Get a single key from a secret
+* [ ] Copy
+** [ ] Duplicate a secret (and open an editor before saving the copy)
+** [ ] Support cross account / region / profiles copy
+
+
+

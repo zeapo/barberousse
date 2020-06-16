@@ -1,0 +1,22 @@
+[package]
+name = "barberousse"
+version = "0.1.0"
+authors = ["Mohamed Zenadi <mohamed@zenadi.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = "0.2"
+rusoto_core = "0.44.0"
+rusoto_secretsmanager = { version = "0.44", features = ["serialize_structs"]}
+structopt = "0.3"
+async-trait = "0.1"
+anyhow = "1.0.31"
+serde = "1"
+serde_yaml = "0.8"
+serde_json = "1"
+tempfile = "3"
+uuid = {version = "0.8", features = ["v4"]}
+promptly = "0.3.0"
+

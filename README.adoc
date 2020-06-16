@@ -11,6 +11,7 @@ fledged project.
 == MVP WishList
 
 When all of the following is checked, it could be said that we've got our 0.1 MVP 🎂🎂🎂
+
 * [ ] General
 ** [ ] Support selecting profiles and regions (env variables are supported though)
 ** [ ] others ?

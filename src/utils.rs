@@ -1,4 +1,5 @@
-use anyhow::Result;
+use anyhow::*;
+use bat::PrettyPrinter;
 use clap::Clap;
 use serde::{Deserialize, Serialize};
 
@@ -10,6 +11,34 @@ pub enum ContentFormat {
     TEXT,
 }
 
+/// Pretty print the content using a given format
+pub fn pretty_print(content: String, print_format: ContentFormat) -> Result<()> {
+    let mut printer = PrettyPrinter::new();
+    let printer = match print_format {
+        ContentFormat::JSON => printer.language("json"),
+        ContentFormat::YAML => printer.language("yaml"),
+        _ => &mut printer,
+    };
+
+    let res = printer
+        .grid(true)
+        .line_numbers(true)
+        .paging_mode(bat::PagingMode::QuitIfOneScreen)
+        .pager("less")
+        .theme("OneHalfDark")
+        .input_from_bytes(content.as_bytes())
+        .print();
+
+    // avoid having to deal with missing Sync in std::error::Error
+    if let Err(_) = res {
+        return Err(anyhow!(format!(
+            "Unable to pretty print the secret's content"
+        )));
+    }
+
+    Ok(())
+}
+
 /// Takes a string in [source_format] and outputs a string in [destination_format]
 pub fn format_convert(
     content: &String,
@@ -19,7 +48,7 @@ pub fn format_convert(
     Ok(match source_format {
         ContentFormat::JSON => {
             let json: serde_json::Value = serde_json::from_str(content)
-                .map_err(|e| anyhow::Error::new(e).context("Unable to parse JSON".to_string()))?;
+                .map_err(|e| Error::new(e).context("Unable to parse JSON".to_string()))?;
 
             match destination_format {
                 ContentFormat::JSON => serde_json::to_string_pretty(&json)?,
@@ -29,7 +58,7 @@ pub fn format_convert(
         }
         ContentFormat::YAML => {
             let yaml: serde_yaml::Value = serde_yaml::from_str(content)
-                .map_err(|e| anyhow::Error::new(e).context("Unable to parse YAML".to_string()))?;
+                .map_err(|e| Error::new(e).context("Unable to parse YAML".to_string()))?;
 
             match destination_format {
                 ContentFormat::JSON => serde_json::to_string_pretty(&yaml)?,

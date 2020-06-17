@@ -27,7 +27,7 @@ When all of the following is checked, it could be said that we've got our 0.1 MV
 ** [ ] Templating support, allow the user to create a secret from a template
 ** [x] Custom editor selection, pass `--editor`
 * [ ] Printing
-** [ ] Cat the content of a secret in one or many other formats
+** [x] Cat the content of a secret in one or many other formats
 ** [ ] Get a single key from a secret
 * [ ] Copy
 ** [ ] Duplicate a secret (and open an editor before saving the copy)

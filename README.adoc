@@ -8,7 +8,7 @@ or worst, storing them on your machin and sending them via slack :)
 NOTE: This project is at its earliest stage a project can be, i.e. a proof of concept that might or not develop into a full
 fledged project.
 
-image::https://gist.githubusercontent.com/zeapo/e6e468331bfb3d2785237a93d782685d/raw/fd032cc99322636dfc0109e226fe0d3b8f54f83c/barbedit.svg
+image:https://gist.githubusercontent.com/zeapo/e6e468331bfb3d2785237a93d782685d/raw/fd032cc99322636dfc0109e226fe0d3b8f54f83c/barbedit.svg[]
 
 == MVP WishList
 

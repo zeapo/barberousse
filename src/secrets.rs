@@ -1,15 +1,16 @@
-use anyhow::Result;
+use anyhow::{anyhow, Error, Result};
+use clap::Clap;
 use rusoto_core;
 use rusoto_secretsmanager::SecretsManager;
 use rusoto_secretsmanager::{GetSecretValueRequest, PutSecretValueRequest, SecretsManagerClient};
-use structopt::clap::arg_enum;
-use structopt::StructOpt;
 
-use serde::Deserialize;
-use std::error::Error;
-use std::io::{BufRead, Read, Seek, SeekFrom, Write};
-use std::ops::Deref;
-use std::str::FromStr;
+use crate::utils::{format_convert, ContentFormat};
+use std::process::ExitStatus;
+use std::{
+    env::var,
+    io::{Read, Seek, SeekFrom, Write},
+    process::Command,
+};
 use uuid::Uuid;
 
 /// Manages the read/write of secrets
@@ -20,55 +21,24 @@ pub struct Manager {
     client: SecretsManagerClient,
 }
 
-arg_enum! {
-    #[derive(Debug)]
-    enum Format {
-        json,
-        yaml,
-        text,
-    }
-}
-
-#[derive(StructOpt)]
+#[derive(Clap)]
+#[clap(version = "0.0.1", author = "zeapo")]
 pub struct EditCommand {
+    /// The id of the secret to edit
     secret_id: String,
+
     /// The format of the secret's remote storage
-    #[structopt(short = "s", long = "secret-format", default_value = "json")]
-    secret_format: Format,
+    #[clap(arg_enum, short = "s", long = "secret-format", default_value = "json")]
+    secret_format: ContentFormat,
+
     /// The format used to edit the secret, if the secret's format is `text`, this will be ignored
     /// and defaults to `text` too
-    #[structopt(short = "e", long = "edit-format", default_value = "yaml")]
-    edit_format: Format,
-}
+    #[clap(arg_enum, short = "e", long = "edit-format", default_value = "yaml")]
+    edit_format: ContentFormat,
 
-/// Takes a string in [source_format] and outputs a string in [destination_format]
-fn format_convert(
-    content: &String,
-    source_format: &Format,
-    destination_format: &Format,
-) -> Result<String> {
-    Ok(match source_format {
-        Format::json => {
-            let json: serde_json::Value = serde_json::from_str(content)?;
-
-            match destination_format {
-                Format::json => serde_json::to_string_pretty(&json)?,
-                Format::yaml => serde_yaml::to_string(&json)?,
-                Format::text => String::from(content),
-            }
-        }
-        Format::yaml => {
-            let yaml: serde_yaml::Value = serde_yaml::from_str(content)
-                .map_err(|e| anyhow::Error::new(e).context("Unable to parse YAML".to_string()))?;
-
-            match destination_format {
-                Format::json => serde_json::to_string_pretty(&yaml)?,
-                Format::yaml => serde_yaml::to_string(&yaml)?,
-                Format::text => String::from(content),
-            }
-        }
-        Format::text => String::from(content),
-    })
+    /// Override the default editor, $EDITOR, used for editing the secret
+    #[clap(long = "editor")]
+    editor: Option<String>,
 }
 
 impl Manager {
@@ -84,6 +54,7 @@ impl Manager {
             secret_id,
             secret_format,
             edit_format,
+            editor,
         } = cmd;
 
         let res = self
@@ -99,37 +70,35 @@ impl Manager {
         //  so that only the user can edit/see it, then put the file in it
         let mut tf = tempfile::NamedTempFile::new()?;
 
-        let content = res.secret_string.as_ref().unwrap();
+        let remote_content = res
+            .secret_string
+            .as_ref()
+            .expect("The secret_id is required");
 
-        let remote_content: String = format_convert(content, &secret_format, &edit_format)?;
+        let formated_content: String =
+            format_convert(remote_content, &secret_format, &edit_format)?;
 
         // write the yaml to content
-        write!(tf, "{}", remote_content)?;
+        write!(tf, "{}", formated_content)?;
 
         // try to edit this secret, until we succeed , or that the
-        let content: Option<String> = loop {
-            let vim_cmd = format!(
-                "vim {}",
+        let edited_content: Option<String> = loop {
+            // Open the editor \o/
+            open_editor(
+                editor.clone(),
                 tf.as_ref()
                     .to_owned()
                     .to_str()
-                    .expect("Unable to handle temp file... this should not happen")
-            );
-
-            let exit = std::process::Command::new("/usr/bin/sh")
-                .arg("-c")
-                .arg(vim_cmd)
-                .spawn()
-                .expect("failed")
-                .wait()?;
+                    .expect("Unable to handle temp file... this should not happen"),
+            )?;
 
             // read the file back
             tf.seek(SeekFrom::Start(0))?;
-            let mut content = String::new();
-            tf.read_to_string(&mut content)?;
+            let mut saved_content = String::new();
+            tf.read_to_string(&mut saved_content)?;
 
             // convert the content back to its original format
-            let edited = format_convert(&content, &edit_format, &secret_format);
+            let edited = format_convert(&saved_content, &edit_format, &secret_format);
 
             match edited {
                 Ok(content) => {
@@ -147,11 +116,18 @@ impl Manager {
         };
 
         // if the content was modified correctly
-        if let Some(content) = content {
+        if let Some(edited_content) = edited_content {
+            // TODO check if the file changed, otherwise no need to create a new version
+            if edited_content.eq(remote_content) {
+                return Err(anyhow!(
+                    "Aborting save due to matching remote and edited secrets"
+                ));
+            }
+
             self.client
                 .put_secret_value(PutSecretValueRequest {
                     secret_id,
-                    secret_string: Some(content),
+                    secret_string: Some(edited_content),
                     client_request_token: Some(Uuid::new_v4().to_string()),
                     ..PutSecretValueRequest::default()
                 })
@@ -164,4 +140,21 @@ impl Manager {
         tf.close()?;
         Ok(())
     }
+}
+
+/// Opens the editor to edit a specific file
+fn open_editor(editor: Option<String>, path: &str) -> Result<ExitStatus> {
+    // Open the editor \o/
+    let editor = editor.unwrap_or_else(|| {
+        // yeah, default to nano if nothing is available
+        var("EDITOR").unwrap_or("nano".to_string())
+    });
+
+    let exit = Command::new(editor)
+        .arg(path)
+        .spawn()
+        .map_err(|e| Error::new(e).context("Unable to launch editor".to_string()))?
+        .wait()?;
+
+    Ok(exit)
 }

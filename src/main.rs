@@ -6,6 +6,7 @@ use crate::edit::EditCommand;
 
 mod cat;
 mod edit;
+mod editor;
 mod secrets;
 mod utils;
 

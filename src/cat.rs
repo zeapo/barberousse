@@ -7,7 +7,7 @@ use crate::utils::{format_convert, pretty_print, ContentFormat};
 
 #[derive(Clap)]
 pub struct CatCommand {
-    /// The id of the secret to edit
+    /// The id of the secret to print
     secret_id: String,
 
     /// The format of the secret's remote storage

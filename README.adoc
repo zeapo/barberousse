@@ -21,13 +21,17 @@ By default the remote secret is read as a json secret and printed in yaml for ea
 this behavior to your choosing by passing the *print format* defining how you want your secrets to be formatted, and
 *secret format* defining the format of the remote secret.
 ....
--e, --print-format <print-format>      The format used to print the secret, if the secret's
-                                       format is `text`, this will be ignored and defaults to
-                                       `text` too [default: yaml]
-                                       [possible values: json, yaml, text]
+ARGS:
+    <secret-id>    The id of the secret to print
 
--s, --secret-format <secret-format>    The format of the secret's remote storage [default: json]
-                                       [possible values: json, yaml, text]
+OPTIONS:
+  -e, --print-format <print-format>      The format used to print the secret, if the secret's
+                                         format is `text`, this will be ignored and defaults to
+                                         `text` too [default: yaml]
+                                         [possible values: json, yaml, text]
+
+  -s, --secret-format <secret-format>    The format of the secret's remote storage [default: json]
+                                         [possible values: json, yaml, text]
 ....
 
 The output is pretty-printed, and color highlighted by default. Disable that by using `--print-format=text`
@@ -55,16 +59,20 @@ Allows you to edit a remote secret without saving it on disk (a temp file is cre
 handle temp files will come in the future, see #3). You can use different formats to edit your secret (json, yaml, plain text).
 
 ....
--e, --edit-format <edit-format>      The format used to edit the secret, if the secret's
-                                     format is `text`, this will be ignored and defaults
-                                     to `text` too [default: yaml]
-                                     [possible values: json, yaml, text]
+ARGS:
+  <secret-id>    The id of the secret to edit
 
--s, --secret-format <secret-format>  The format of the secret's remote storage [default: json]
-                                     [possible values: json, yaml, text]
+OPTIONS:
+  -e, --edit-format <edit-format>      The format used to edit the secret, if the secret's
+                                       format is `text`, this will be ignored and defaults
+                                       to `text` too [default: yaml]
+                                       [possible values: json, yaml, text]
 
---editor <editor>                    Override the default editor, $EDITOR, used for
-                                     editing the secret
+  -s, --secret-format <secret-format>  The format of the secret's remote storage [default: json]
+                                       [possible values: json, yaml, text]
+
+  --editor <editor>                    Override the default editor, $EDITOR, used for
+                                       editing the secret
 ....
 
 * To edit in YAML a JSON secret (default):
@@ -77,6 +85,33 @@ handle temp files will come in the future, see #3). You can use different format
   
 How it may look like  on your terminal:
 image:https://gist.githubusercontent.com/zeapo/e6e468331bfb3d2785237a93d782685d/raw/f652a19d1e86e96453bac4593055041516ea08f6/barbedit.svg[]
+
+=== Copying
+By copying a secret, you can customize them for different usage. Use this feature wisely as it may lead to re-using
+the secrets and this is not a good practice. A useful case (not yet implemented) is to be able to have same template
+across two different regions / accounts.
+
+....
+ARGS:
+  <secret-id>    The id of the secret to copy
+  <target-id>    The id of the secret to create
+
+OPTIONS:
+  -e, --edit-format <edit-format>      The format used to edit the secret, if the secret's
+                                       format is `text`, this will be ignored and defaults
+                                       to `text` too [default: yaml]
+                                       [possible values: json, yaml, text]
+
+  -s, --secret-format <secret-format>  The format of the secret's remote storage [default: json]
+                                       [possible values: json, yaml, text]
+
+  --editor <editor>                    Override the default editor, $EDITOR, used for
+                                       editing the secret
+....
+
+* To copy a JSON secret and edit it in YAML (default):
+
+  ❯❯❯ barberousse copy /test/file /test/file2
 
 == Wishlist
 
@@ -91,7 +126,6 @@ When all of the following is checked, it could be said that we've got our 0.1 MV
 ** [x] Edit <format> using <another format>
 ** [ ] Edit basic secrets
 ** [ ] Create a secret if not exist
-** [ ] Edit Secret metadata
 ** [ ] Templating support, allow the user to create a secret from a template
 ** [x] Custom editor selection, pass `--editor`
 ** [ ] Edit secret's metadata
@@ -100,7 +134,7 @@ When all of the following is checked, it could be said that we've got our 0.1 MV
 ** [ ] Get a single key from a secret
 ** [ ] Print secret's metadata
 * [ ] Copy
-** [ ] Duplicate a secret (and open an editor before saving the copy)
+** [x] Duplicate a secret (and open an editor before saving the copy)
 ** [ ] Support cross account / region / profiles copy
 
 

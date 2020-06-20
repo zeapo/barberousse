@@ -67,6 +67,14 @@ handle temp files will come in the future, see #3). You can use different format
                                      editing the secret
 ....
 
+* To edit in YAML a JSON secret (default):
+  
+  ❯❯❯ barberousse edit /test/file --edit-format yaml --secret-format json
+  
+* To edit in JSON a JSON secret:
+
+  ❯❯❯ barberousse edit /test/file --edit-format json --secret-format json
+  
 How it may look like  on your terminal:
 image:https://gist.githubusercontent.com/zeapo/e6e468331bfb3d2785237a93d782685d/raw/f652a19d1e86e96453bac4593055041516ea08f6/barbedit.svg[]
 

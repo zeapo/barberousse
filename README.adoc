@@ -11,11 +11,63 @@ NOTE: This project is at its earliest stage a project can be, i.e. a proof of co
 fledged project.
 
 == Printing
-Cat your secret in a nice format
+Cat your secret in a nice format into stdout
+
+By default the remote secret is read as a json secret and printed in yaml for ease of read. However, you can customize
+this behavior to your choosing by passing the *print format* defining how you want your secrets to be formatted, and
+*secret format* defining the format of the remote secret.
+....
+-e, --print-format <print-format>      The format used to print the secret, if the secret's
+                                       format is `text`, this will be ignored and defaults to
+                                       `text` too [default: yaml]
+                                       [possible values: json, yaml, text]
+
+-s, --secret-format <secret-format>    The format of the secret's remote storage [default: json]
+                                       [possible values: json, yaml, text]
+....
+
+The output is pretty-printed, and color highlighted by default. Disable that by using `--print-format=text`
+
+* YAML output (default)
+ +++
+ <pre><font color="#CC0000"><b>❯</b></font><font color="#C4A000"><b>❯</b></font><font color="#4E9A06"><b>❯</b></font> barberousse cat /test/file
+ <font color="#919BAA">   1</font> <font color="#919BAA">│</font> <font color="#DCDFE4">---</font>
+ <font color="#919BAA">   2</font> <font color="#919BAA">│</font> <font color="#E06C75">a</font><font color="#DCDFE4">: </font><font color="#98C379">secret</font>
+ <font color="#919BAA">   3</font> <font color="#919BAA">│</font> <font color="#E06C75">another</font><font color="#DCDFE4">: </font><font color="#98C379">secret value</font>
+ </pre>
+ +++
+
+* JSON output
+ +++
+ <pre><font color="#CC0000"><b>❯</b></font><font color="#C4A000"><b>❯</b></font><font color="#4E9A06"><b>❯</b></font> barberousse cat /test/file --print-format json
+ <font color="#919BAA">   1</font> <font color="#919BAA">│</font> <font color="#DCDFE4">{</font>
+ <font color="#919BAA">   2</font> <font color="#919BAA">│</font> <font color="#DCDFE4">  </font><font color="#98C379">&quot;a&quot;</font><font color="#DCDFE4">: </font><font color="#98C379">&quot;secret&quot;</font><font color="#DCDFE4">,</font>
+ <font color="#919BAA">   3</font> <font color="#919BAA">│</font> <font color="#DCDFE4">  </font><font color="#98C379">&quot;another&quot;</font><font color="#DCDFE4">: </font><font color="#98C379">&quot;secret value&quot;</font>
+ <font color="#919BAA">   4</font> <font color="#919BAA">│</font> <font color="#DCDFE4">}</font>
+ </pre>
+ +++
+
+How it may look like  on your terminal:
 image:https://gist.githubusercontent.com/zeapo/dc584b68baa0e735670ad87b4754debe/raw/227c8de2a054dd844d67b01893bc954aca951157/barbcat.svg[]
 
 == Editing
-Allows you to edit a remote secret without saving it on disk (a temp file is created though... a more secure way to handle temp files will come in the future). You can use different formats to edit your secret (json, yaml, plain text):
+Allows you to edit a remote secret without saving it on disk (a temp file is created though... a more secure way to
+handle temp files will come in the future, see #3). You can use different formats to edit your secret (json, yaml, plain text).
+
+....
+-e, --edit-format <edit-format>      The format used to edit the secret, if the secret's
+                                     format is `text`, this will be ignored and defaults
+                                     to `text` too [default: yaml]
+                                     [possible values: json, yaml, text]
+
+-s, --secret-format <secret-format>  The format of the secret's remote storage [default: json]
+                                     [possible values: json, yaml, text]
+
+--editor <editor>                    Override the default editor, $EDITOR, used for
+                                     editing the secret
+....
+
+How it may look like  on your terminal:
 image:https://gist.githubusercontent.com/zeapo/e6e468331bfb3d2785237a93d782685d/raw/f652a19d1e86e96453bac4593055041516ea08f6/barbedit.svg[]
 
 == MVP WishList

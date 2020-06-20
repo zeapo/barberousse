@@ -10,7 +10,13 @@ or worst, storing them on your machine and sending them via slack :)
 NOTE: This project is at its earliest stage a project can be, i.e. a proof of concept that might or not develop into a full
 fledged project.
 
-image:https://gist.githubusercontent.com/zeapo/e6e468331bfb3d2785237a93d782685d/raw/fd032cc99322636dfc0109e226fe0d3b8f54f83c/barbedit.svg[]
+== Printing
+Cat your secret in a nice format
+image:https://gist.githubusercontent.com/zeapo/dc584b68baa0e735670ad87b4754debe/raw/227c8de2a054dd844d67b01893bc954aca951157/barbcat.svg[]
+
+== Editing
+Allows you to edit a remote secret without saving it on disk (a temp file is created though... a more secure way to handle temp files will come in the future). You can use different formats to edit your secret (json, yaml, plain text):
+image:https://gist.githubusercontent.com/zeapo/e6e468331bfb3d2785237a93d782685d/raw/f652a19d1e86e96453bac4593055041516ea08f6/barbedit.svg[]
 
 == MVP WishList
 
@@ -28,9 +34,11 @@ When all of the following is checked, it could be said that we've got our 0.1 MV
 ** [ ] Edit Secret metadata
 ** [ ] Templating support, allow the user to create a secret from a template
 ** [x] Custom editor selection, pass `--editor`
+** [ ] Edit secret's metadata
 * [ ] Printing
 ** [x] Cat the content of a secret in one or many other formats
 ** [ ] Get a single key from a secret
+** [ ] Print secret's metadata
 * [ ] Copy
 ** [ ] Duplicate a secret (and open an editor before saving the copy)
 ** [ ] Support cross account / region / profiles copy

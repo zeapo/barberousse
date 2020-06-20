@@ -1,7 +1,10 @@
 = Barberousse - Remote Secrets Editor
+:toc:
+:toc-title:
 
 image:https://gist.githubusercontent.com/zeapo/2afd80cabc820156fd34f5888f207202/raw/d90618f2cc72fb62436303caba1a46c0282ca87a/barblogo.svg[width=120,align=center]
 
+== About
 A project aimed to avoid downloading secrets from remote providers (support only AWS Secret Manager for the moment).
 Opens an editor with the content of the secret readily editable, upon save & exit, the secret is automatically uploaded
 and a new version created remotely. This way, no need to use common bad-practices such as versionning secrets in a VCS
@@ -10,15 +13,72 @@ or worst, storing them on your machine and sending them via slack :)
 NOTE: This project is at its earliest stage a project can be, i.e. a proof of concept that might or not develop into a full
 fledged project.
 
-== Printing
-Cat your secret in a nice format
+== Usage
+=== Printing
+Cat your secret in a nice format into stdout
+
+By default the remote secret is read as a json secret and printed in yaml for ease of read. However, you can customize
+this behavior to your choosing by passing the *print format* defining how you want your secrets to be formatted, and
+*secret format* defining the format of the remote secret.
+....
+-e, --print-format <print-format>      The format used to print the secret, if the secret's
+                                       format is `text`, this will be ignored and defaults to
+                                       `text` too [default: yaml]
+                                       [possible values: json, yaml, text]
+
+-s, --secret-format <secret-format>    The format of the secret's remote storage [default: json]
+                                       [possible values: json, yaml, text]
+....
+
+The output is pretty-printed, and color highlighted by default. Disable that by using `--print-format=text`
+
+* YAML output (default)
+
+ ❯❯❯ barberousse cat /test/file --print-format yaml
+   1 │ ---
+   2 │ a: secret
+   3 │ another: secret value
+
+* JSON output
+
+ ❯❯❯ barberousse cat /test/file --print-format json
+   1 │ {
+   2 │   "a": "secret",
+   3 │   "another": "secret value"
+   4 │ }
+
+How it may look like  on your terminal:
 image:https://gist.githubusercontent.com/zeapo/dc584b68baa0e735670ad87b4754debe/raw/227c8de2a054dd844d67b01893bc954aca951157/barbcat.svg[]
 
-== Editing
-Allows you to edit a remote secret without saving it on disk (a temp file is created though... a more secure way to handle temp files will come in the future). You can use different formats to edit your secret (json, yaml, plain text):
+=== Editing
+Allows you to edit a remote secret without saving it on disk (a temp file is created though... a more secure way to
+handle temp files will come in the future, see #3). You can use different formats to edit your secret (json, yaml, plain text).
+
+....
+-e, --edit-format <edit-format>      The format used to edit the secret, if the secret's
+                                     format is `text`, this will be ignored and defaults
+                                     to `text` too [default: yaml]
+                                     [possible values: json, yaml, text]
+
+-s, --secret-format <secret-format>  The format of the secret's remote storage [default: json]
+                                     [possible values: json, yaml, text]
+
+--editor <editor>                    Override the default editor, $EDITOR, used for
+                                     editing the secret
+....
+
+* To edit in YAML a JSON secret (default):
+  
+  ❯❯❯ barberousse edit /test/file --edit-format yaml --secret-format json
+  
+* To edit in JSON a JSON secret:
+
+  ❯❯❯ barberousse edit /test/file --edit-format json --secret-format json
+  
+How it may look like  on your terminal:
 image:https://gist.githubusercontent.com/zeapo/e6e468331bfb3d2785237a93d782685d/raw/f652a19d1e86e96453bac4593055041516ea08f6/barbedit.svg[]
 
-== MVP WishList
+== Wishlist
 
 When all of the following is checked, it could be said that we've got our 0.1 MVP 🎂🎂🎂
 

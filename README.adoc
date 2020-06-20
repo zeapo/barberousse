@@ -1,7 +1,10 @@
 = Barberousse - Remote Secrets Editor
+:toc:
+:toc-title:
 
 image:https://gist.githubusercontent.com/zeapo/2afd80cabc820156fd34f5888f207202/raw/d90618f2cc72fb62436303caba1a46c0282ca87a/barblogo.svg[width=120,align=center]
 
+== About
 A project aimed to avoid downloading secrets from remote providers (support only AWS Secret Manager for the moment).
 Opens an editor with the content of the secret readily editable, upon save & exit, the secret is automatically uploaded
 and a new version created remotely. This way, no need to use common bad-practices such as versionning secrets in a VCS
@@ -10,7 +13,8 @@ or worst, storing them on your machine and sending them via slack :)
 NOTE: This project is at its earliest stage a project can be, i.e. a proof of concept that might or not develop into a full
 fledged project.
 
-== Printing
+== Usage
+=== Printing
 Cat your secret in a nice format into stdout
 
 By default the remote secret is read as a json secret and printed in yaml for ease of read. However, you can customize
@@ -46,7 +50,7 @@ The output is pretty-printed, and color highlighted by default. Disable that by 
 How it may look like  on your terminal:
 image:https://gist.githubusercontent.com/zeapo/dc584b68baa0e735670ad87b4754debe/raw/227c8de2a054dd844d67b01893bc954aca951157/barbcat.svg[]
 
-== Editing
+=== Editing
 Allows you to edit a remote secret without saving it on disk (a temp file is created though... a more secure way to
 handle temp files will come in the future, see #3). You can use different formats to edit your secret (json, yaml, plain text).
 
@@ -66,7 +70,7 @@ handle temp files will come in the future, see #3). You can use different format
 How it may look like  on your terminal:
 image:https://gist.githubusercontent.com/zeapo/e6e468331bfb3d2785237a93d782685d/raw/f652a19d1e86e96453bac4593055041516ea08f6/barbedit.svg[]
 
-== MVP WishList
+== Wishlist
 
 When all of the following is checked, it could be said that we've got our 0.1 MVP 🎂🎂🎂
 

@@ -1,8 +1,12 @@
 [package]
 name = "barberousse"
+description = "A utility to edit secrets from AWS Secrets Manager without storing them"
 version = "0.1.0"
 authors = ["Mohamed Zenadi <mohamed@zenadi.com>"]
 edition = "2018"
+license = "MIT"
+repository = "https://github.com/zeapo/barberousse"
+keywords = ["aws", "secrets manager"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

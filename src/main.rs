@@ -1,13 +1,9 @@
 use anyhow::Result;
 use clap::Clap;
+use rusoto_secretsmanager::SecretsManagerClient;
 
-use crate::cat::CatCommand;
-use crate::copy::CopyCommand;
-use crate::edit::EditCommand;
+use crate::secrets::*;
 
-mod cat;
-mod copy;
-mod edit;
 mod editor;
 mod secrets;
 mod utils;
@@ -39,12 +35,13 @@ enum SubCommands {
 #[tokio::main]
 async fn main() -> Result<()> {
     let opt: SecretStore = SecretStore::parse();
-    let manager = secrets::Manager::new(opt.profile, opt.region)?;
+    let manager = SecretsManagerClient::new_client(opt.profile.clone(), opt.region)?;
+
     // manager.list().await;
     match opt.cmd {
-        SubCommands::Edit(cmd) => manager.edit(cmd).await?,
-        SubCommands::Cat(cmd) => manager.cat(cmd).await?,
-        SubCommands::Copy(cmd) => manager.copy(cmd).await?,
+        SubCommands::Edit(cmd) => manager.edit_secret(cmd).await?,
+        SubCommands::Cat(cmd) => manager.cat_secret(cmd).await?,
+        SubCommands::Copy(cmd) => manager.copy_secret(cmd, opt.profile).await?,
     }
     Ok(())
 }

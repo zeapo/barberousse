@@ -14,6 +14,16 @@ NOTE: This project is at its earliest stage a project can be, i.e. a proof of co
 fledged project.
 
 == Usage
+=== Options
+Just like awscli, you can customize the profile and region to use:
+....
+OPTIONS:
+  --profile <profile>    Use a specific aws profile, overrides config and env settings
+  --region <region>      The region where the secret is, overrides config and env settings
+....
+
+These are global options, and can be set anywhere in the command.
+
 === Printing
 Cat your secret in a nice format into stdout
 
@@ -88,8 +98,7 @@ image:https://gist.githubusercontent.com/zeapo/e6e468331bfb3d2785237a93d782685d/
 
 === Copying
 By copying a secret, you can customize them for different usage. Use this feature wisely as it may lead to re-using
-the secrets and this is not a good practice. A useful case (not yet implemented) is to be able to have same template
-across two different regions / accounts.
+the secrets and this is not a good practice.
 
 ....
 ARGS:
@@ -107,11 +116,18 @@ OPTIONS:
 
   --editor <editor>                    Override the default editor, $EDITOR, used for
                                        editing the secret
+
+  --target-region <target-region>      Use a different region for the target secret
+
 ....
 
 * To copy a JSON secret and edit it in YAML (default):
 
   ❯❯❯ barberousse copy /test/file /test/file2
+
+* To copy a secret from one region to another:
+
+  ❯❯❯ barberousse copy /test/file /test/file2 --region eu-west-1 --target-region eu-west-3
 
 == Wishlist
 
@@ -132,9 +148,9 @@ When all of the following is checked, it could be said that we've got our 0.1 MV
 ** [x] Cat the content of a secret in one or many other formats
 ** [ ] Get a single key from a secret
 ** [ ] Print secret's metadata
-* [-] Copy
+* [x] Copy
 ** [x] Duplicate a secret (and open an editor before saving the copy)
-** [ ] Support cross region / profiles copy
+** [x] Support cross region
 
 
 

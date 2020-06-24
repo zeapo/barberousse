@@ -23,4 +23,4 @@ serde_json = "1"
 tempfile = "3"
 uuid = {version = "0.8", features = ["v4"]}
 promptly = "0.3.0"
-bat = "0.15"
+bat = "0.15.4"

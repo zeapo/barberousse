@@ -129,28 +129,34 @@ OPTIONS:
 
   ❯❯❯ barberousse copy /test/file /test/file2 --region eu-west-1 --target-region eu-west-3
 
-== Wishlist
-
-When all of the following is checked, it could be said that we've got our 0.1 MVP 🎂🎂🎂
-
+== RoadMap
+=== 1.0
+We're almost there!
 * [-] General
 ** [x] Support selecting profiles and regions (env variables are supported though)
-** [ ] others ?
 * [-] Editing
 ** [x] Edit JSON, YAML, text
 ** [x] Edit JSON using YAML (default behavior)
 ** [x] Edit <format> using <another format>
 ** [ ] Create a secret if not exist
-** [ ] Templating support, allow the user to create a secret from a template
 ** [x] Custom editor selection, pass `--editor`
-** [ ] Edit secret's metadata
 * [ ] Printing
 ** [x] Cat the content of a secret in one or many other formats
-** [ ] Get a single key from a secret
-** [ ] Print secret's metadata
+** [ ] Get a single key from a secret: would behave just like piping the output of the cli to `jq '.SecretString.<key>'`
 * [x] Copy
 ** [x] Duplicate a secret (and open an editor before saving the copy)
 ** [x] Support cross region
+
+=== 1.1
+Some extra features to edit non-content info. This should be more an interactive
+process overall otherwise it would not make sense to have them as the aws cli
+already provides a good api to do exactly that.
+
+* Edit secret's metadata (description and KMS key): replaces the `update-secret --description "" --kms-key-id ""`
+* Print secret's metadata
+
+=== Future
+Open to suggestions!
 
 
 

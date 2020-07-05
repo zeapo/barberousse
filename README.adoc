@@ -138,7 +138,7 @@ We're almost there!
 ** [x] Edit JSON, YAML, text
 ** [x] Edit JSON using YAML (default behavior)
 ** [x] Edit <format> using <another format>
-** [ ] Create a secret if not exist
+** [x] Create a secret if not exist
 ** [x] Custom editor selection, pass `--editor`
 * [ ] Printing
 ** [x] Cat the content of a secret in one or many other formats

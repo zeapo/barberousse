@@ -29,6 +29,10 @@ pub struct CatCommand {
     /// and defaults to `text` too
     #[clap(arg_enum, short = "e", long = "print-format", default_value = "yaml")]
     print_format: ContentFormat,
+
+    /// Do not pretty print the content, this behavior is the default when piping to another program
+    #[clap(short = "p", long = "plain")]
+    plain_print: bool,
 }
 
 #[derive(Clap)]
@@ -111,6 +115,7 @@ impl SecretsManagerClientExt for SecretsManagerClient {
             secret_id,
             secret_format,
             print_format,
+            plain_print,
         } = cmd;
 
         let res = self
@@ -126,7 +131,14 @@ impl SecretsManagerClientExt for SecretsManagerClient {
             .expect("The secret_id is required");
         //
         let formatted_content = format_convert(remote_content, &secret_format, &print_format)?;
-        pretty_print(formatted_content, print_format)?;
+
+        // if the user requested plain print, or we're the stdin for another program (pipe)
+        // then just print the content without bat
+        if plain_print || atty::is(atty::Stream::Stdin) {
+            println!("{}", formatted_content);
+        } else {
+            pretty_print(formatted_content, print_format)?;
+        }
 
         Ok(())
     }

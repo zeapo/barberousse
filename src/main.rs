@@ -11,11 +11,11 @@ mod utils;
 #[derive(Clap)]
 struct SecretStore {
     /// Use a specific aws profile, overrides config and env settings
-    #[clap(long = "profile", global = true)]
+    #[clap(short = "P", long = "profile", global = true)]
     profile: Option<String>,
 
     /// The region where the secret is, overrides config and env settings
-    #[clap(long = "region", global = true)]
+    #[clap(short = "R", long = "region", global = true)]
     region: Option<String>,
 
     #[clap(subcommand)]

@@ -6,8 +6,8 @@ use anyhow::*;
 use clap::Clap;
 use rusoto_core;
 use rusoto_secretsmanager::{
-    CreateSecretRequest, GetSecretValueRequest, PutSecretValueRequest, SecretsManager,
-    SecretsManagerClient,
+    CreateSecretRequest, GetSecretValueError, GetSecretValueRequest, PutSecretValueRequest,
+    SecretsManager, SecretsManagerClient,
 };
 use uuid::Uuid;
 
@@ -15,6 +15,7 @@ use async_trait::async_trait;
 
 use crate::utils::ContentFormat;
 use crate::utils::{format_convert, pretty_print};
+use rusoto_core::RusotoError;
 
 #[derive(Clap)]
 pub struct CatCommand {
@@ -146,25 +147,45 @@ impl SecretsManagerClientExt for SecretsManagerClient {
                 secret_id: secret_id.clone(),
                 ..GetSecretValueRequest::default()
             })
-            .await?;
+            .await;
 
-        let remote_content = res
-            .secret_string
-            .as_ref()
-            .expect("The secret_id is required");
+        let res = match res {
+            Ok(r) => Ok(Some(r)),
+            Err(RusotoError::Service(GetSecretValueError::ResourceNotFound(_))) => Ok(None),
+            Err(e) => Err(e),
+        }?;
 
-        let edited_content =
-            crate::editor::edit_content(editor, &remote_content, secret_format, edit_format)?;
+        let (remote_content, to_create) = match res {
+            Some(r) => (r.secret_string.expect("The secret_id is required"), false),
+            None => ("{\"\": \"\"}".to_string(), true),
+        };
+
+        let edited_content = crate::editor::edit_content(
+            editor,
+            &remote_content.to_string(),
+            secret_format,
+            edit_format,
+        )?;
 
         // if the content was modified correctly
-        if edited_content.ne(remote_content) {
-            self.put_secret_value(PutSecretValueRequest {
-                secret_id,
-                secret_string: Some(edited_content),
-                client_request_token: Some(Uuid::new_v4().to_string()),
-                ..PutSecretValueRequest::default()
-            })
-            .await?;
+        if edited_content.ne(&remote_content) {
+            if to_create {
+                self.create_secret(CreateSecretRequest {
+                    name: secret_id,
+                    secret_string: Some(edited_content),
+                    client_request_token: Some(Uuid::new_v4().to_string()),
+                    ..CreateSecretRequest::default()
+                })
+                .await?;
+            } else {
+                self.put_secret_value(PutSecretValueRequest {
+                    secret_id,
+                    secret_string: Some(edited_content),
+                    client_request_token: Some(Uuid::new_v4().to_string()),
+                    ..PutSecretValueRequest::default()
+                })
+                .await?;
+            }
         } else {
             // check if the file changed, otherwise no need to create a new version
             return Err(anyhow!(

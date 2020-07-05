@@ -18,8 +18,9 @@ fledged project.
 Just like awscli, you can customize the profile and region to use:
 ....
 OPTIONS:
-  --profile <profile>    Use a specific aws profile, overrides config and env settings
-  --region <region>      The region where the secret is, overrides config and env settings
+  -P, --profile <profile>    Use a specific aws profile, overrides config and env settings
+
+  -R, --region <region>      The region where the secret is, overrides config and env settings
 ....
 
 These are global options, and can be set anywhere in the command.
@@ -33,6 +34,11 @@ this behavior to your choosing by passing the *print format* defining how you wa
 ....
 ARGS:
     <secret-id>    The id of the secret to print
+
+FLAGS:
+  -p, --plain      Do not pretty print the content, this behavior is the default when piping
+                   to another program
+
 
 OPTIONS:
   -e, --print-format <print-format>      The format used to print the secret, if the secret's
@@ -60,6 +66,11 @@ The output is pretty-printed, and color highlighted by default. Disable that by 
    2 │   "a": "secret",
    3 │   "another": "secret value"
    4 │ }
+
+* JSON output piped to `jq`
+
+ ❯❯❯ barberousse cat /test/file --print-format json | jq -r '.a'
+ secret
 
 How it may look like  on your terminal:
 image:https://gist.githubusercontent.com/zeapo/dc584b68baa0e735670ad87b4754debe/raw/227c8de2a054dd844d67b01893bc954aca951157/barbcat.svg[]
@@ -140,9 +151,8 @@ We're almost there!
 ** [x] Edit <format> using <another format>
 ** [x] Create a secret if not exist
 ** [x] Custom editor selection, pass `--editor`
-* [ ] Printing
+* [x] Printing
 ** [x] Cat the content of a secret in one or many other formats
-** [ ] Get a single key from a secret: would behave just like piping the output of the cli to `jq '.SecretString.<key>'`
 * [x] Copy
 ** [x] Duplicate a secret (and open an editor before saving the copy)
 ** [x] Support cross region

@@ -1,7 +1,7 @@
 [package]
 name = "barberousse"
 description = "A utility to edit secrets from AWS Secrets Manager without storing them locally"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Mohamed Zenadi <mohamed@zenadi.com>"]
 edition = "2018"
 license = "MIT"

@@ -1,10 +1,13 @@
-= Barberousse - Remote Secrets Editor
+= Barberousse - Remote Secrets Editor 
 :toc:
 :toc-title:
 
 image:https://gist.githubusercontent.com/zeapo/2afd80cabc820156fd34f5888f207202/raw/d90618f2cc72fb62436303caba1a46c0282ca87a/barblogo.svg[width=120,align=center]
 
 == About
+
+image:https://github.com/zeapo/barberousse/workflows/build/badge.svg[]
+
 A project aimed to avoid downloading secrets from remote providers (support only AWS Secret Manager for the moment).
 Opens an editor with the content of the secret readily editable, upon save & exit, the secret is automatically uploaded
 and a new version created remotely. This way, no need to use common bad-practices such as versionning secrets in a VCS

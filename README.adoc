@@ -143,9 +143,10 @@ OPTIONS:
 == RoadMap
 === 1.0
 We're almost there!
-* [-] General
+
+* [x] General
 ** [x] Support selecting profiles and regions (env variables are supported though)
-* [-] Editing
+* [x] Editing
 ** [x] Edit JSON, YAML, text
 ** [x] Edit JSON using YAML (default behavior)
 ** [x] Edit <format> using <another format>

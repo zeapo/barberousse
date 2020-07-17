@@ -28,11 +28,11 @@ pub struct CatCommand {
 
     /// The format used to print the secret, if the secret's format is `text`, this will be ignored
     /// and defaults to `text` too
-    #[clap(arg_enum, short = "e", long = "print-format", default_value = "yaml")]
+    #[clap(arg_enum, short = "p", long = "print-format", default_value = "yaml")]
     print_format: ContentFormat,
 
-    /// Do not pretty print the content, this behavior is the default when piping to another program
-    #[clap(short = "p", long = "plain")]
+    /// Do not color the output, this behavior is the same as when piping to another program
+    #[clap(short = "n", long = "no-color")]
     plain_print: bool,
 }
 

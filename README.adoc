@@ -39,12 +39,11 @@ ARGS:
     <secret-id>    The id of the secret to print
 
 FLAGS:
-  -p, --plain      Do not pretty print the content, this behavior is the default when piping
-                   to another program
+  -n, --no-color    Do not color the output, this behavior is the same as when piping to another program
 
 
 OPTIONS:
-  -e, --print-format <print-format>      The format used to print the secret, if the secret's
+  -p, --print-format <print-format>      The format used to print the secret, if the secret's
                                          format is `text`, this will be ignored and defaults to
                                          `text` too [default: yaml]
                                          [possible values: json, yaml, text]

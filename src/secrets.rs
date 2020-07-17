@@ -135,7 +135,7 @@ impl SecretsManagerClientExt for SecretsManagerClient {
 
         // if the user requested plain print, or we're the stdin for another program (pipe)
         // then just print the content without bat
-        if plain_print || atty::is(atty::Stream::Stdin) {
+        if plain_print || atty::isnt(atty::Stream::Stdout) {
             println!("{}", formatted_content);
         } else {
             pretty_print(formatted_content, print_format)?;

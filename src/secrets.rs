@@ -132,14 +132,7 @@ impl SecretsManagerClientExt for SecretsManagerClient {
             .expect("The secret_id is required");
         //
         let formatted_content = format_convert(remote_content, &secret_format, &print_format)?;
-
-        // if the user requested plain print, or we're the stdin for another program (pipe)
-        // then just print the content without bat
-        if plain_print || atty::isnt(atty::Stream::Stdout) {
-            println!("{}", formatted_content);
-        } else {
-            pretty_print(formatted_content, print_format)?;
-        }
+        pretty_print(formatted_content, plain_print, print_format)?;
 
         Ok(())
     }

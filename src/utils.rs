@@ -12,31 +12,38 @@ pub enum ContentFormat {
 }
 
 /// Pretty print the content using a given format
-pub fn pretty_print(content: String, print_format: ContentFormat) -> Result<()> {
-    let mut printer = PrettyPrinter::new();
-    let printer = match print_format {
-        ContentFormat::JSON => printer.language("json"),
-        ContentFormat::YAML => printer.language("yaml"),
-        _ => &mut printer,
-    };
+pub fn pretty_print(content: String, plain_print: bool, print_format: ContentFormat) -> Result<()> {
+    // if the user requested plain print, or we're the stdin for another program (pipe)
+    // then just print the content without bat
+    if plain_print || atty::isnt(atty::Stream::Stdout) {
+        println!("{}", content);
+        Ok(())
+    } else {
+        let mut printer = PrettyPrinter::new();
+        let printer = match print_format {
+            ContentFormat::JSON => printer.language("json"),
+            ContentFormat::YAML => printer.language("yaml"),
+            _ => &mut printer,
+        };
 
-    let res = printer
-        .grid(true)
-        .line_numbers(true)
-        .paging_mode(bat::PagingMode::QuitIfOneScreen)
-        .pager("less")
-        .theme("OneHalfDark")
-        .input_from_bytes(content.as_bytes())
-        .print();
+        let res = printer
+            .grid(true)
+            .line_numbers(true)
+            .paging_mode(bat::PagingMode::QuitIfOneScreen)
+            .pager("less")
+            .theme("OneHalfDark")
+            .input_from_bytes(content.as_bytes())
+            .print();
 
-    // avoid having to deal with missing Sync in std::error::Error
-    if let Err(_) = res {
-        return Err(anyhow!(format!(
-            "Unable to pretty print the secret's content"
-        )));
+        // avoid having to deal with missing Sync in std::error::Error
+        if let Err(_) = res {
+            Err(anyhow!(format!(
+                "Unable to pretty print the secret's content"
+            )))
+        } else {
+            Ok(())
+        }
     }
-
-    Ok(())
 }
 
 /// Takes a string in [source_format] and outputs a string in [destination_format]

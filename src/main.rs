@@ -31,6 +31,8 @@ enum SubCommands {
     Cat(CatCommand),
     /// Cat a secret
     Copy(CopyCommand),
+    /// List secrets
+    List(ListCommand),
 }
 
 #[tokio::main]
@@ -40,9 +42,10 @@ async fn main() -> Result<()> {
 
     // manager.list().await;
     match opt.cmd {
-        SubCommands::Edit(cmd) => manager.edit_secret(cmd).await?,
-        SubCommands::Cat(cmd) => manager.cat_secret(cmd).await?,
-        SubCommands::Copy(cmd) => manager.copy_secret(cmd, opt.profile).await?,
+        SubCommands::Edit(cmd) => manager._edit_secret(cmd).await?,
+        SubCommands::Cat(cmd) => manager._cat_secret(cmd).await?,
+        SubCommands::Copy(cmd) => manager._copy_secret(cmd, opt.profile).await?,
+        SubCommands::List(cmd) => manager._list_secrets(cmd).await?,
     }
     Ok(())
 }

@@ -26,3 +26,4 @@ promptly = "0.3.0"
 bat = "0.15.4"
 atty = "0.2.14"
 shell = { git = "https://github.com/google/rust-shell" }
+stybulate = "1.1"

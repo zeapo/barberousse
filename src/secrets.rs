@@ -3,18 +3,19 @@ use std::str::FromStr;
 
 use anyhow::Result;
 use anyhow::*;
-use clap::Clap;
-use rusoto_secretsmanager::{
-    CreateSecretRequest, GetSecretValueError, GetSecretValueRequest, PutSecretValueRequest,
-    SecretsManager, SecretsManagerClient,
-};
-use uuid::Uuid;
-
 use async_trait::async_trait;
+use clap::Clap;
+use rusoto_core;
+use rusoto_core::RusotoError;
+use rusoto_secretsmanager::{
+    CreateSecretRequest, GetSecretValueError, GetSecretValueRequest, ListSecretsRequest,
+    PutSecretValueRequest, SecretsManager, SecretsManagerClient,
+};
+use stybulate::{Cell, Headers, Style, Table};
+use uuid::Uuid;
 
 use crate::utils::ContentFormat;
 use crate::utils::{format_convert, pretty_print};
-use rusoto_core::RusotoError;
 
 #[derive(Clap)]
 pub struct CatCommand {
@@ -80,12 +81,23 @@ pub struct CopyCommand {
     target_region: Option<String>,
 }
 
+#[derive(Clap)]
+pub struct ListCommand {
+    /// The id of the secret for which to list versions
+    secret_id: Option<String>,
+
+    /// Total number of items to return
+    #[clap(long = "max-items")]
+    max_items: Option<i32>,
+}
+
 #[async_trait]
 pub trait SecretsManagerClientExt {
     fn new_client(profile: Option<String>, region: Option<String>) -> Result<SecretsManagerClient>;
-    async fn cat_secret(&self, cmd: CatCommand) -> Result<()>;
-    async fn edit_secret(&self, cmd: EditCommand) -> Result<()>;
-    async fn copy_secret(&self, cmd: CopyCommand, profile: Option<String>) -> Result<()>;
+    async fn _cat_secret(&self, cmd: CatCommand) -> Result<()>;
+    async fn _edit_secret(&self, cmd: EditCommand) -> Result<()>;
+    async fn _copy_secret(&self, cmd: CopyCommand, profile: Option<String>) -> Result<()>;
+    async fn _list_secrets(&self, cmd: ListCommand) -> Result<()>;
 }
 
 #[async_trait]
@@ -109,7 +121,7 @@ impl SecretsManagerClientExt for SecretsManagerClient {
     }
 
     /// Print the content of a secret
-    async fn cat_secret(&self, cmd: CatCommand) -> Result<()> {
+    async fn _cat_secret(&self, cmd: CatCommand) -> Result<()> {
         // deconstruct this little bad boy
         let CatCommand {
             secret_id,
@@ -137,7 +149,7 @@ impl SecretsManagerClientExt for SecretsManagerClient {
     }
 
     /// Edit the content of a secret
-    async fn edit_secret(&self, cmd: EditCommand) -> Result<()> {
+    async fn _edit_secret(&self, cmd: EditCommand) -> Result<()> {
         // deconstruct this little bad boy
         let EditCommand {
             secret_id,
@@ -201,7 +213,7 @@ impl SecretsManagerClientExt for SecretsManagerClient {
     }
 
     /// Copy a secret to another secret
-    async fn copy_secret(&self, cmd: CopyCommand, profile: Option<String>) -> Result<()> {
+    async fn _copy_secret(&self, cmd: CopyCommand, profile: Option<String>) -> Result<()> {
         // deconstruct this little bad boy
         let CopyCommand {
             secret_id,
@@ -243,6 +255,53 @@ impl SecretsManagerClientExt for SecretsManagerClient {
                 ..CreateSecretRequest::default()
             })
             .await?;
+
+        Ok(())
+    }
+
+    /// List all secrets
+    async fn _list_secrets(&self, cmd: ListCommand) -> Result<()> {
+        let mut continuation_token: Option<String> = None;
+        let mut secrets: Vec<Vec<String>> = vec![];
+
+        loop {
+            let result = self
+                .list_secrets(ListSecretsRequest {
+                    next_token: continuation_token.clone(),
+                    ..ListSecretsRequest::default()
+                })
+                .await?;
+            continuation_token = result.next_token;
+
+            if let Some(secret_list) = result.secret_list {
+                for item in secret_list {
+                    secrets.push(vec![
+                        item.name.unwrap_or("".to_string()),
+                        item.description.unwrap_or("".to_string()),
+                        item.arn.unwrap_or("".to_string()),
+                    ]);
+                }
+            }
+
+            if continuation_token == None {
+                break;
+            }
+        }
+
+        let table = Table::new(
+            Style::Grid,
+            secrets
+                .iter()
+                .map(|r| r.iter().map(|c| Cell::from(c)).collect())
+                .collect(),
+            Some(Headers::from(vec![
+                "name (secret_id)",
+                "description",
+                "arn",
+            ])),
+        )
+        .tabulate();
+        println!("{}", table);
 
         Ok(())
     }

@@ -12,8 +12,12 @@ keywords = ["aws", "secrets"]
 
 [dependencies]
 tokio = "0.2"
-rusoto_core = "0.44.0"
-rusoto_secretsmanager = { version = "0.44", features = ["serialize_structs"]}
+#rusoto_core = "0.45.0"
+#rusoto_sts = "0.45.0"
+#rusoto_secretsmanager = { version = "0.45", features = ["serialize_structs"]}
+rusoto_core = { path = "../rusoto/rusoto/core" }
+rusoto_sts = { path = "../rusoto/rusoto/services/sts" }
+rusoto_secretsmanager =  { path = "../rusoto/rusoto/services/secretsmanager" }
 clap = "3.0.0-beta.1"
 async-trait = "0.1"
 anyhow = {version = "1.0.31", features = ["std"]}

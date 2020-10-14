@@ -6,7 +6,6 @@ use anyhow::*;
 use async_trait::async_trait;
 use clap::Clap;
 use rusoto_core;
-use rusoto_core::RusotoError;
 use rusoto_secretsmanager::{
     CreateSecretRequest, GetSecretValueError, GetSecretValueRequest, ListSecretsRequest,
     PutSecretValueRequest, SecretsManager, SecretsManagerClient,
@@ -16,6 +15,11 @@ use uuid::Uuid;
 
 use crate::utils::ContentFormat;
 use crate::utils::{format_convert, pretty_print};
+use rusoto_core::credential::{ProfileProvider, ProvideAwsCredentials};
+use rusoto_core::HttpClient;
+use rusoto_sts::StsAssumeRoleSessionCredentialsProvider;
+use std::borrow::Borrow;
+use std::ops::Deref;
 
 #[derive(Clap)]
 pub struct CatCommand {
@@ -23,16 +27,16 @@ pub struct CatCommand {
     secret_id: String,
 
     /// The format of the secret's remote storage
-    #[clap(arg_enum, short = "s", long = "secret-format", default_value = "json")]
+    #[clap(arg_enum, short = 's', long = "secret-format", default_value = "json")]
     secret_format: ContentFormat,
 
     /// The format used to print the secret, if the secret's format is `text`, this will be ignored
     /// and defaults to `text` too
-    #[clap(arg_enum, short = "p", long = "print-format", default_value = "yaml")]
+    #[clap(arg_enum, short = 'p', long = "print-format", default_value = "yaml")]
     print_format: ContentFormat,
 
     /// Do not color the output, this behavior is the same as when piping to another program
-    #[clap(short = "n", long = "no-color")]
+    #[clap(short = 'n', long = "no-color")]
     plain_print: bool,
 }
 
@@ -42,12 +46,12 @@ pub struct EditCommand {
     secret_id: String,
 
     /// The format of the secret's remote storage
-    #[clap(arg_enum, short = "s", long = "secret-format", default_value = "json")]
+    #[clap(arg_enum, short = 's', long = "secret-format", default_value = "json")]
     secret_format: ContentFormat,
 
     /// The format used to edit the secret, if the secret's format is `text`, this will be ignored
     /// and defaults to `text` too
-    #[clap(arg_enum, short = "e", long = "edit-format", default_value = "yaml")]
+    #[clap(arg_enum, short = 'e', long = "edit-format", default_value = "yaml")]
     edit_format: ContentFormat,
 
     /// Override the default editor, $EDITOR, used for editing the secret
@@ -64,12 +68,12 @@ pub struct CopyCommand {
     target_id: String,
 
     /// The format of the secret's remote storage
-    #[clap(arg_enum, short = "s", long = "secret-format", default_value = "json")]
+    #[clap(arg_enum, short = 's', long = "secret-format", default_value = "json")]
     secret_format: ContentFormat,
 
     /// The format used to edit the secret, if the secret's format is `text`, this will be ignored
     /// and defaults to `text` too
-    #[clap(arg_enum, short = "e", long = "edit-format", default_value = "yaml")]
+    #[clap(arg_enum, short = 'e', long = "edit-format", default_value = "yaml")]
     edit_format: ContentFormat,
 
     /// Override the default editor, $EDITOR, used for editing the secret
@@ -93,7 +97,10 @@ pub struct ListCommand {
 
 #[async_trait]
 pub trait SecretsManagerClientExt {
-    fn new_client(profile: Option<String>, region: Option<String>) -> Result<SecretsManagerClient>;
+    async fn new_client(
+        profile: Option<String>,
+        region: Option<String>,
+    ) -> Result<SecretsManagerClient>;
     async fn _cat_secret(&self, cmd: CatCommand) -> Result<()>;
     async fn _edit_secret(&self, cmd: EditCommand) -> Result<()>;
     async fn _copy_secret(&self, cmd: CopyCommand, profile: Option<String>) -> Result<()>;
@@ -104,20 +111,40 @@ pub trait SecretsManagerClientExt {
 impl SecretsManagerClientExt for SecretsManagerClient {
     /// Create a new manager client. Overrides the default `profile` and `region`
     /// if they are provided.
-    fn new_client(profile: Option<String>, region: Option<String>) -> Result<SecretsManagerClient> {
-        // FIXME use the ProfileProvider::with_default_credentials(profile) once it's merged
-        //       in https://github.com/rusoto/rusoto/pull/1776
-        //       For the moment rely on a hackish env variable change
-        if let Some(profile) = profile {
-            env::set_var("AWS_PROFILE", profile);
-        }
-
+    async fn new_client(
+        profile: Option<String>,
+        region: Option<String>,
+    ) -> Result<SecretsManagerClient> {
         let region = match region {
             Some(r) => rusoto_core::Region::from_str(&r)?,
             None => rusoto_core::Region::default(),
         };
 
-        Ok(SecretsManagerClient::new(region))
+        match profile {
+            Some(profile) => {
+                let profile_provider = ProfileProvider::with_default_credentials(profile)?;
+                println!("here {:?}", profile_provider);
+
+                let assume = StsAssumeRoleSessionCredentialsProvider::with_profile_provider(
+                    profile_provider.clone(),
+                );
+
+                if let Ok(assume) = assume {
+                    Ok(SecretsManagerClient::new_with(
+                        HttpClient::new().expect("failed to create request dispatcher"),
+                        assume,
+                        region.into(),
+                    ))
+                } else {
+                    Ok(SecretsManagerClient::new_with(
+                        HttpClient::new().expect("failed to create request dispatcher"),
+                        profile_provider,
+                        region.into(),
+                    ))
+                }
+            }
+            None => Ok(SecretsManagerClient::new(region.into())),
+        }
     }
 
     /// Print the content of a secret
@@ -167,7 +194,7 @@ impl SecretsManagerClientExt for SecretsManagerClient {
 
         let res = match res {
             Ok(r) => Ok(Some(r)),
-            Err(RusotoError::Service(GetSecretValueError::ResourceNotFound(_))) => Ok(None),
+            // Err(RusotoError::Service(GetSecretValueError::ResourceNotFound(_))) => Ok(None),
             Err(e) => Err(e),
         }?;
 
@@ -241,7 +268,7 @@ impl SecretsManagerClientExt for SecretsManagerClient {
 
         // create a new client pointing to the new region
         let target_client = if target_region != None {
-            SecretsManagerClient::new_client(profile, target_region)?
+            SecretsManagerClient::new_client(profile, target_region).await?
         } else {
             self.clone()
         };

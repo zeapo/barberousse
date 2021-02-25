@@ -72,8 +72,12 @@ fn open_editor(editor: Option<String>, path: &str) -> Result<ExitStatus> {
         // yeah, default to nano if nothing is available
         var("EDITOR").unwrap_or("nano".to_string())
     });
-
-    let exit = Command::new(editor)
+    
+    // Parse editor to spaces
+    let program = editor.split(" ");
+    let args: Vec<&str> = program.collect();
+    let exit = Command::new(args[0])
+        .args(&args[1..args.len()])
         .arg(path)
         .spawn()
         .map_err(|e| Error::new(e).context("Unable to launch editor".to_string()))?

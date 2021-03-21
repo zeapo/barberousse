@@ -25,3 +25,4 @@ uuid = {version = "0.8", features = ["v4"]}
 promptly = "0.3.0"
 bat = "0.15.4"
 atty = "0.2.14"
+shell = { git = "https://github.com/google/rust-shell" }

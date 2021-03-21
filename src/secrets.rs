@@ -4,7 +4,6 @@ use std::str::FromStr;
 use anyhow::Result;
 use anyhow::*;
 use clap::Clap;
-use rusoto_core;
 use rusoto_secretsmanager::{
     CreateSecretRequest, GetSecretValueError, GetSecretValueRequest, PutSecretValueRequest,
     SecretsManager, SecretsManagerClient,

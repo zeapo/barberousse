@@ -1,3 +1,4 @@
+#[macro_use] extern crate shell;
 use anyhow::Result;
 use clap::Clap;
 use rusoto_secretsmanager::SecretsManagerClient;

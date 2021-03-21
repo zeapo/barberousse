@@ -1,9 +1,9 @@
 use std::{
     env::var,
     io::{Read, Seek, SeekFrom, Write},
-    process::{Command, ExitStatus},
-};
 
+};
+use shell::ShellResult;
 use anyhow::*;
 
 use crate::utils::{format_convert, ContentFormat};
@@ -35,7 +35,7 @@ pub fn edit_content(
                 .to_owned()
                 .to_str()
                 .expect("Unable to handle temp file... this should not happen"),
-        )?;
+        )?.ok();
 
         // read the file back
         tf.seek(SeekFrom::Start(0))?;
@@ -66,18 +66,14 @@ pub fn edit_content(
 }
 
 /// Opens the editor to edit a specific file
-fn open_editor(editor: Option<String>, path: &str) -> Result<ExitStatus> {
+fn open_editor(editor: Option<String>, path: &str) -> Result<ShellResult> {
     // Open the editor \o/
     let editor = editor.unwrap_or_else(|| {
         // yeah, default to nano if nothing is available
-        var("EDITOR").unwrap_or("nano".to_string())
+        var("EDITOR").unwrap_or_else(|_| "nano".to_string())
     });
 
-    let exit = Command::new(editor)
-        .arg(path)
-        .spawn()
-        .map_err(|e| Error::new(e).context("Unable to launch editor".to_string()))?
-        .wait()?;
+    let cmd = format!("{} {}",&editor,path);
+    cmd!(&cmd).run().map_err(|_| anyhow!("Can't open `{}` editor",&editor)).map(|_|shell::ok())
 
-    Ok(exit)
 }

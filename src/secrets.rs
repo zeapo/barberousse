@@ -1,25 +1,23 @@
-use std::env;
 use std::str::FromStr;
 
 use anyhow::Result;
 use anyhow::*;
 use async_trait::async_trait;
+use chrono::prelude::*;
 use clap::Clap;
 use rusoto_core;
+use rusoto_core::credential::ProfileProvider;
+use rusoto_core::HttpClient;
 use rusoto_secretsmanager::{
-    CreateSecretRequest, GetSecretValueError, GetSecretValueRequest, ListSecretsRequest,
+    CreateSecretRequest, GetSecretValueRequest, ListSecretVersionIdsRequest, ListSecretsRequest,
     PutSecretValueRequest, SecretsManager, SecretsManagerClient,
 };
+use rusoto_sts::StsAssumeRoleSessionCredentialsProvider;
 use stybulate::{Cell, Headers, Style, Table};
 use uuid::Uuid;
 
 use crate::utils::ContentFormat;
 use crate::utils::{format_convert, pretty_print};
-use rusoto_core::credential::{ProfileProvider, ProvideAwsCredentials};
-use rusoto_core::HttpClient;
-use rusoto_sts::StsAssumeRoleSessionCredentialsProvider;
-use std::borrow::Borrow;
-use std::ops::Deref;
 
 #[derive(Clap)]
 pub struct CatCommand {
@@ -89,10 +87,6 @@ pub struct CopyCommand {
 pub struct ListCommand {
     /// The id of the secret for which to list versions
     secret_id: Option<String>,
-
-    /// Total number of items to return
-    #[clap(long = "max-items")]
-    max_items: Option<i32>,
 }
 
 #[async_trait]
@@ -105,6 +99,7 @@ pub trait SecretsManagerClientExt {
     async fn _edit_secret(&self, cmd: EditCommand) -> Result<()>;
     async fn _copy_secret(&self, cmd: CopyCommand, profile: Option<String>) -> Result<()>;
     async fn _list_secrets(&self, cmd: ListCommand) -> Result<()>;
+    async fn _list_versions(&self, secret_id: String) -> Result<()>;
 }
 
 #[async_trait]
@@ -123,7 +118,6 @@ impl SecretsManagerClientExt for SecretsManagerClient {
         match profile {
             Some(profile) => {
                 let profile_provider = ProfileProvider::with_default_credentials(profile)?;
-                println!("here {:?}", profile_provider);
 
                 let assume = StsAssumeRoleSessionCredentialsProvider::with_profile_provider(
                     profile_provider.clone(),
@@ -288,6 +282,12 @@ impl SecretsManagerClientExt for SecretsManagerClient {
 
     /// List all secrets
     async fn _list_secrets(&self, cmd: ListCommand) -> Result<()> {
+        let ListCommand { secret_id } = cmd;
+        // if the user just wants the versions
+        if let Some(secret_id) = secret_id {
+            return self._list_versions(secret_id).await;
+        }
+
         let mut continuation_token: Option<String> = None;
         let mut secrets: Vec<Vec<String>> = vec![];
 
@@ -325,6 +325,59 @@ impl SecretsManagerClientExt for SecretsManagerClient {
                 "name (secret_id)",
                 "description",
                 "arn",
+            ])),
+        )
+        .tabulate();
+        println!("{}", table);
+
+        Ok(())
+    }
+
+    async fn _list_versions(&self, secret_id: String) -> Result<()> {
+        let mut continuation_token: Option<String> = None;
+        let mut secrets: Vec<Vec<String>> = vec![];
+
+        loop {
+            let result = self
+                .list_secret_version_ids(ListSecretVersionIdsRequest {
+                    next_token: continuation_token.clone(),
+                    secret_id: secret_id.clone(),
+                    ..ListSecretVersionIdsRequest::default()
+                })
+                .await?;
+            continuation_token = result.next_token;
+
+            if let Some(versions) = result.versions {
+                for item in versions {
+                    secrets.push(vec![
+                        item.version_id.unwrap_or("".to_string()),
+                        item.created_date.map_or("".to_string(), |e| {
+                            Utc.timestamp_millis((e * 1000.0) as i64).to_rfc3339()
+                        }),
+                        item.last_accessed_date.map_or("".to_string(), |e| {
+                            Utc.timestamp_millis((e * 1000.0) as i64)
+                                .format("%Y-%m-%d")
+                                .to_string()
+                        }),
+                    ]);
+                }
+            }
+
+            if continuation_token == None {
+                break;
+            }
+        }
+
+        let table = Table::new(
+            Style::Grid,
+            secrets
+                .iter()
+                .map(|r| r.iter().map(|c| Cell::from(c)).collect())
+                .collect(),
+            Some(Headers::from(vec![
+                "version id",
+                "created at",
+                "last accessed (date)",
             ])),
         )
         .tabulate();

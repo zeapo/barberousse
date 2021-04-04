@@ -36,6 +36,10 @@ pub struct CatCommand {
     /// Do not color the output, this behavior is the same as when piping to another program
     #[clap(short = 'n', long = "no-color")]
     plain_print: bool,
+
+    /// Cat a specific version
+    #[clap(long = "version-id")]
+    version_id: Option<String>,
 }
 
 #[derive(Clap)]
@@ -149,11 +153,13 @@ impl SecretsManagerClientExt for SecretsManagerClient {
             secret_format,
             print_format,
             plain_print,
+            version_id,
         } = cmd;
 
         let res = self
             .get_secret_value(GetSecretValueRequest {
                 secret_id: secret_id.clone(),
+                version_id,
                 ..GetSecretValueRequest::default()
             })
             .await?;

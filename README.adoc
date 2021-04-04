@@ -28,6 +28,19 @@ OPTIONS:
 
 These are global options, and can be set anywhere in the command.
 
+=== Listing
+Lists your secrets and their versions
+
+....
+USAGE:
+    barberousse list [OPTIONS] [secret-id]
+
+ARGS:
+    <secret-id>    The id of the secret for which to list versions
+....
+
+If no `secret-id` is passed, lists all your secrets. To list the versions, just pass the id of the secret.
+
 === Printing
 Cat your secret in a nice format into stdout
 
@@ -50,6 +63,8 @@ OPTIONS:
 
   -s, --secret-format <secret-format>    The format of the secret's remote storage [default: json]
                                          [possible values: json, yaml, text]
+
+      --version-id <version-id>          Cat a specific version
 ....
 
 The output is pretty-printed, and color highlighted by default. Disable that by using `--print-format=text`
